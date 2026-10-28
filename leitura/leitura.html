@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeituraTracker - Monitoramento de Leitura</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="leitura.css">
+</head>
+<body>
+
+    <!-- MODAL: ADICIONAR LIVRO -->
+    <div id="modalLivro" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <h3><i class="fas fa-book-open"></i> Adicionar Livro</h3>
+            <!-- Arquivo primeiro: extrai metadados automaticamente -->
+            <div class="form-group">
+                <label>Arquivo do Livro (PDF ou EPUB) *</label>
+                <div class="tipo-arquivo-tabs">
+                    <button class="tipo-btn active" id="btnTipoPDF" onclick="selecionarTipo('pdf')"><i class="fas fa-file-pdf"></i> PDF</button>
+                    <button class="tipo-btn" id="btnTipoEPUB" onclick="selecionarTipo('epub')"><i class="fas fa-book"></i> EPUB</button>
+                </div>
+                <div class="file-drop-zone" id="dropZone">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p id="dropZoneTexto">Arraste o PDF aqui ou clique para selecionar</p>
+                    <input type="file" id="inputArquivo" accept=".pdf" style="display:none" />
+                    <span id="nomeArquivo" class="file-name"></span>
+                </div>
+                <div id="epubInfo" class="epub-info" style="display:none;">
+                    <i class="fas fa-info-circle"></i>
+                    <span>EPUBs são lidos diretamente no navegador com suporte a capítulos e navegação.</span>
+                </div>
+            </div>
+
+            <!-- Spinner de extração -->
+            <div id="extraindoMeta" class="extraindo-meta" style="display:none;">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Extraindo informações do arquivo...</span>
+            </div>
+
+            <!-- Preview da capa -->
+            <div id="previewCapaWrap" class="preview-capa-wrap" style="display:none;">
+                <img id="imgPreviewCapa" src="" alt="Capa" class="preview-capa-img" />
+                <span class="preview-capa-tag"><i class="fas fa-check-circle"></i> Capa extraída automaticamente</span>
+            </div>
+
+            <div class="form-group">
+                <label>Titulo do Livro *</label>
+                <input type="text" id="inputTitulo" placeholder="Ex: Dom Casmurro (detectado automaticamente)" />
+            </div>
+            <div class="form-group">
+                <label>Autor</label>
+                <input type="text" id="inputAutor" placeholder="Ex: Machado de Assis (detectado automaticamente)" />
+            </div>
+            <div class="form-group">
+                <label>Total de Paginas</label>
+                <input type="number" id="inputPaginas" placeholder="Detectado automaticamente" min="1" />
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="salvarLivro()"><i class="fas fa-save"></i> Salvar Livro</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: VISUALIZAR PDF -->
+    <div id="modalPDF" class="modal-overlay" style="display:none;">
+        <div class="modal-box modal-pdf">
+            <div class="modal-pdf-header">
+                <span id="tituloPDFModal"></span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <button class="btn btn-secondary btn-sm" onclick="abrirPDFNovaAba()"><i class="fas fa-external-link-alt"></i> Nova Aba</button>
+                    <button class="btn btn-danger btn-sm" onclick="fecharPDF()"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <iframe id="iframePDF" src="" frameborder="0"></iframe>
+            <div class="leitor-pagina-bar">
+                <i class="fas fa-bookmark" style="color:#4facfe;"></i>
+                <span class="leitor-pagina-label">Voce esta na pagina:</span>
+                <input type="number" id="pdfPaginaInput" min="1" placeholder="No" class="input-pagina-leitor" />
+                <span id="pdfTotalPaginasLabel" style="color:rgba(255,255,255,0.45);font-size:0.82rem;"></span>
+                <button class="btn btn-primary btn-sm" onclick="salvarPaginaPDF()"><i class="fas fa-save"></i> Salvar progresso</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: VISUALIZAR EPUB -->
+    <div id="modalEPUB" class="modal-overlay" style="display:none;">
+        <div class="modal-box modal-epub">
+            <div class="modal-epub-header">
+                <button class="epub-nav-btn" onclick="epubAnterior()" title="Capitulo anterior"><i class="fas fa-chevron-left"></i></button>
+                <div class="epub-titulo-wrap">
+                    <span id="tituloEPUBModal"></span>
+                    <small id="epubCapituloInfo" style="color:rgba(255,255,255,0.5);font-size:0.75rem;"></small>
+                </div>
+                <button class="epub-nav-btn" onclick="epubProximo()" title="Proximo capitulo"><i class="fas fa-chevron-right"></i></button>
+                <button class="btn btn-secondary btn-sm" onclick="abrirEPUBNovaAba()" style="margin-left:6px;" title="Nova aba"><i class="fas fa-external-link-alt"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="fecharEPUB()" style="margin-left:4px;"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="areaEPUB" class="area-epub"></div>
+            <div class="epub-barra-progresso">
+                <div id="epubBarra" class="epub-barra-fill"></div>
+            </div>
+            <div class="leitor-pagina-bar">
+                <i class="fas fa-bookmark" style="color:#4facfe;"></i>
+                <span class="leitor-pagina-label">Progresso: <strong id="epubPctTracker" style="color:#4facfe;">0%</strong></span>
+                <span style="color:rgba(255,255,255,0.35);">|</span>
+                <span class="leitor-pagina-label">Pagina estimada:</span>
+                <input type="number" id="epubPaginaInput" min="1" placeholder="No" class="input-pagina-leitor" />
+                <button class="btn btn-primary btn-sm" onclick="salvarPaginaEPUB()"><i class="fas fa-save"></i> Salvar progresso</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <div class="container">
+        <header class="header">
+            <button class="back-btn" onclick="window.location.href='../Index.html'"><i class="fas fa-arrow-left"></i> Voltar</button>
+            <div class="logo"><i class="fas fa-seedling"></i> HabitTracker</div>
+            <button class="btn btn-primary" onclick="abrirModal()"><i class="fas fa-plus"></i> Adicionar Livro</button>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="tab-btn active" onclick="showSection('leitura', this)"><i class="fas fa-stopwatch"></i> Sessao de Leitura</button>
+            <button class="tab-btn" onclick="showSection('biblioteca', this)"><i class="fas fa-book-open"></i> Biblioteca</button>
+            <button class="tab-btn" onclick="showSection('estatisticas', this)"><i class="fas fa-chart-bar"></i> Estatisticas</button>
+        </nav>
+
+        <!-- SECAO LEITURA -->
+        <section id="leitura" class="section active">
+            <div class="leitura-grid">
+                <div class="card livro-atual-card">
+                    <h3><i class="fas fa-bookmark"></i> Livro Atual</h3>
+                    <div id="semLivroAtual" class="empty-state">
+                        <i class="fas fa-book" style="font-size:3rem;opacity:0.3;"></i>
+                        <p>Nenhum livro selecionado</p>
+                        <button class="btn btn-primary" onclick="showSection('biblioteca', document.querySelectorAll('.tab-btn')[1])">Escolher na Biblioteca</button>
+                    </div>
+                    <div id="infoLivroAtual" style="display:none;">
+                        <div class="livro-info-header">
+                            <div class="livro-capa" id="capaAtual"><i class="fas fa-book"></i></div>
+                            <div>
+                                <h4 id="tituloAtual">-</h4>
+                                <p id="autorAtual" class="text-muted">-</p>
+                                <span id="tipoLivroAtual" class="badge-tipo"></span>
+                            </div>
+                        </div>
+                        <div class="progresso-leitura">
+                            <div class="progresso-labels">
+                                <span>Progresso</span>
+                                <span id="percentualLeitura">0%</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" id="barraProgresso" style="width:0%"></div>
+                            </div>
+                            <div class="progresso-labels text-muted">
+                                <span>Pagina <span id="paginaAtualNum">0</span> de <span id="totalPaginasNum">?</span></span>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top:12px;">
+                            <label style="font-size:0.85rem;">Atualizar pagina atual:</label>
+                            <div style="display:flex;gap:8px;">
+                                <input type="number" id="inputPaginaAtual" placeholder="Ex: 45" min="0" class="input-small" />
+                                <button class="btn btn-primary btn-sm" onclick="atualizarPagina()">Salvar</button>
+                            </div>
+                        </div>
+                        <div class="livro-acoes">
+                            <button class="btn btn-primary" onclick="lerLivroAtual()"><i class="fas fa-eye"></i> Ler</button>
+                            <button class="btn btn-success" onclick="concluirLivro()"><i class="fas fa-check"></i> Concluido</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card cronometro-card">
+                    <h3><i class="fas fa-stopwatch"></i> Cronometro</h3>
+                    <div class="relogio">
+                        <span id="horas">00</span>:<span id="minutos">00</span>:<span id="segundos">00</span>
+                    </div>
+                    <div class="cronometro-btns">
+                        <button class="btn btn-primary" id="btnIniciar" onclick="iniciarCronometro()"><i class="fas fa-play"></i> Iniciar</button>
+                        <button class="btn btn-warning" id="btnPausar" onclick="pausarCronometro()" disabled><i class="fas fa-pause"></i> Pausar</button>
+                        <button class="btn btn-danger" id="btnParar" onclick="pararCronometro()" disabled><i class="fas fa-stop"></i> Parar</button>
+                    </div>
+                    <div class="sessao-info" id="sessaoInfo" style="display:none;">
+                        <p><i class="fas fa-clock"></i> Sessao registrada: <strong id="duracaoSessao"></strong></p>
+                    </div>
+                    <div class="metas-card" style="margin-top:16px;">
+                        <h4>Meta de Leitura Diaria</h4>
+                        <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+                            <input type="number" id="metaMinutos" placeholder="Minutos/dia" class="input-small" value="30" min="1" />
+                            <button class="btn btn-secondary btn-sm" onclick="salvarMeta()">Definir</button>
+                        </div>
+                        <div class="progresso-labels" style="margin-top:8px;">
+                            <span>Hoje: <strong id="minutosHoje">0</strong> min</span>
+                            <span id="metaLabel">Meta: 30 min</span>
+                        </div>
+                        <div class="progress-bar-bg" style="margin-top:6px;">
+                            <div class="progress-bar-fill" id="barraMetaDiaria" style="width:0%;background:linear-gradient(90deg,#f6d365,#fda085)"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECAO BIBLIOTECA -->
+        <section id="biblioteca" class="section">
+            <div class="biblioteca-header">
+                <h3><i class="fas fa-book-open"></i> Minha Biblioteca</h3>
+                <div class="biblioteca-filtros">
+                    <button class="filtro-btn active" onclick="filtrarBiblioteca('todos', this)">Todos</button>
+                    <button class="filtro-btn" onclick="filtrarBiblioteca('lendo', this)">Lendo</button>
+                    <button class="filtro-btn" onclick="filtrarBiblioteca('concluido', this)">Concluidos</button>
+                    <button class="filtro-btn" onclick="filtrarBiblioteca('pdf', this)">PDF</button>
+                    <button class="filtro-btn" onclick="filtrarBiblioteca('epub', this)">EPUB</button>
+                </div>
+            </div>
+            <div id="gridLivros" class="grid-livros">
+                <div class="empty-state" id="emptyBiblioteca">
+                    <i class="fas fa-book" style="font-size:3rem;opacity:0.3;"></i>
+                    <p>Nenhum livro na biblioteca ainda.</p>
+                    <button class="btn btn-primary" onclick="abrirModal()"><i class="fas fa-plus"></i> Adicionar Primeiro Livro</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECAO ESTATISTICAS -->
+        <section id="estatisticas" class="section">
+            <div class="stats-grid">
+                <div class="stat-card"><i class="fas fa-book-open stat-icon" style="color:#4facfe"></i><div class="stat-numero" id="statLivrosLidos">0</div><div class="stat-label">Livros Concluidos</div></div>
+                <div class="stat-card"><i class="fas fa-clock stat-icon" style="color:#f6d365"></i><div class="stat-numero" id="statMediaDiaria">0 min</div><div class="stat-label">Media Diaria</div></div>
+                <div class="stat-card"><i class="fas fa-calendar-week stat-icon" style="color:#43e97b"></i><div class="stat-numero" id="statMediaSemanal">0 min</div><div class="stat-label">Media Semanal</div></div>
+                <div class="stat-card"><i class="fas fa-fire stat-icon" style="color:#fa8231"></i><div class="stat-numero" id="statSequencia">0</div><div class="stat-label">Sequencia (dias)</div></div>
+            </div>
+            <div class="charts-grid">
+                <div class="card chart-card">
+                    <h4><i class="fas fa-chart-bar"></i> Tempo de Leitura (ultimos 7 dias)</h4>
+                    <canvas id="chartSemanal"></canvas>
+                </div>
+                <div class="card chart-card">
+                    <h4><i class="fas fa-chart-line"></i> Progresso Mensal (minutos)</h4>
+                    <canvas id="chartMensal"></canvas>
+                </div>
+            </div>
+            <div class="card" style="margin-top:20px;">
+                <h4 style="margin-bottom:16px;"><i class="fas fa-history"></i> Historico de Sessoes</h4>
+                <div id="historicoSessoes" class="historico-lista">
+                    <p class="text-muted" style="text-align:center;">Nenhuma sessao registrada ainda.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="leitura.js"></script>
+</body>
+</html>

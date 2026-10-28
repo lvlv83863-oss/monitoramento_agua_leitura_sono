@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hábitos Tracker  - Monitoramento de Sono & Sonhos</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="sonho.css">
+</head>
+<body>
+
+<!-- ========== MODAL: REGISTRAR SONO ========== -->
+<div class="modal-overlay" id="modalSono">
+    <div class="modal-box">
+        <button class="modal-close" onclick="fecharModal('modalSono')"><i class="fas fa-times"></i></button>
+        <h3><i class="fas fa-bed"></i> Registrar Noite de Sono</h3>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label><i class="fas fa-moon"></i> Hora que dormiu</label>
+                <input type="time" id="horaDormiu" value="22:30">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-sun"></i> Hora que acordou</label>
+                <input type="time" id="horaAcordou" value="06:30">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label><i class="fas fa-calendar-day"></i> Data</label>
+            <input type="date" id="dataSono">
+        </div>
+
+        <div class="form-group">
+            <label><i class="fas fa-star"></i> Qualidade do Sono</label>
+            <div class="estrelas-qualidade" id="estrelasQualidade">
+                <button class="estrela" data-val="1" onclick="selecionarQualidade(1)">★</button>
+                <button class="estrela" data-val="2" onclick="selecionarQualidade(2)">★</button>
+                <button class="estrela" data-val="3" onclick="selecionarQualidade(3)">★</button>
+                <button class="estrela" data-val="4" onclick="selecionarQualidade(4)">★</button>
+                <button class="estrela" data-val="5" onclick="selecionarQualidade(5)">★</button>
+            </div>
+            <small id="labelQualidade" class="qualidade-label">Selecione a qualidade</small>
+        </div>
+
+        <div class="form-group">
+            <label><i class="fas fa-cloud-moon"></i> Humor ao acordar</label>
+            <div class="humor-grid">
+                <button class="humor-btn" data-humor="😴" onclick="selecionarHumor('😴','Cansado')">😴 Cansado</button>
+                <button class="humor-btn" data-humor="😐" onclick="selecionarHumor('😐','Neutro')">😐 Neutro</button>
+                <button class="humor-btn" data-humor="😊" onclick="selecionarHumor('😊','Bem')">😊 Bem</button>
+                <button class="humor-btn" data-humor="⚡" onclick="selecionarHumor('⚡','Energizado')">⚡ Energizado</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label><i class="fas fa-notes-medical"></i> Fatores (opcional)</label>
+            <div class="fatores-grid">
+                <label class="fator-item"><input type="checkbox" value="cafeina"> ☕ Cafeína</label>
+                <label class="fator-item"><input type="checkbox" value="alcool"> 🍷 Álcool</label>
+                <label class="fator-item"><input type="checkbox" value="exercicio"> 🏃 Exercício</label>
+                <label class="fator-item"><input type="checkbox" value="tela"> 📱 Tela antes de dormir</label>
+                <label class="fator-item"><input type="checkbox" value="estresse"> 😰 Estresse</label>
+                <label class="fator-item"><input type="checkbox" value="meditacao"> 🧘 Meditação</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label><i class="fas fa-comment"></i> Observações</label>
+            <textarea id="obsNota" placeholder="Como foi sua noite? Acordou no meio? Teve dificuldade para dormir?" rows="3"></textarea>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="fecharModal('modalSono')">Cancelar</button>
+            <button class="btn btn-primary" onclick="salvarSono()"><i class="fas fa-save"></i> Salvar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========== MODAL: REGISTRAR SONHO ========== -->
+<div class="modal-overlay" id="modalSonho">
+    <div class="modal-box">
+        <button class="modal-close" onclick="fecharModal('modalSonho')"><i class="fas fa-times"></i></button>
+        <h3><i class="fas fa-cloud-moon-rain"></i> Registrar Sonho</h3>
+
+        <div class="form-group">
+            <label>Título do Sonho</label>
+            <input type="text" id="sonhoTitulo" placeholder="Ex: Voando sobre o mar...">
+        </div>
+
+        <div class="form-group">
+            <label>Data</label>
+            <input type="date" id="sonhoData">
+        </div>
+
+        <div class="form-group">
+            <label>Descrição do Sonho *</label>
+            <textarea id="sonhoDescricao" placeholder="Descreva seu sonho com o máximo de detalhes que se lembrar..." rows="5"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Tipo de Sonho</label>
+            <div class="tipo-sonho-grid">
+                <button class="tipo-sonho-btn" data-tipo="normal" onclick="selecionarTipoSonho('normal')">💭 Normal</button>
+                <button class="tipo-sonho-btn" data-tipo="lucido" onclick="selecionarTipoSonho('lucido')">✨ Lúcido</button>
+                <button class="tipo-sonho-btn" data-tipo="pesadelo" onclick="selecionarTipoSonho('pesadelo')">😱 Pesadelo</button>
+                <button class="tipo-sonho-btn" data-tipo="recorrente" onclick="selecionarTipoSonho('recorrente')">🔄 Recorrente</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Emoções no Sonho</label>
+            <div class="emocoes-grid">
+                <label class="emocao-item"><input type="checkbox" value="alegria"> 😄 Alegria</label>
+                <label class="emocao-item"><input type="checkbox" value="medo"> 😨 Medo</label>
+                <label class="emocao-item"><input type="checkbox" value="tristeza"> 😢 Tristeza</label>
+                <label class="emocao-item"><input type="checkbox" value="confusao"> 😕 Confusão</label>
+                <label class="emocao-item"><input type="checkbox" value="surpresa"> 😲 Surpresa</label>
+                <label class="emocao-item"><input type="checkbox" value="paz"> 😌 Paz</label>
+                <label class="emocao-item"><input type="checkbox" value="ansiedade"> 😟 Ansiedade</label>
+                <label class="emocao-item"><input type="checkbox" value="amor"> 🥰 Amor</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Clareza da Memória</label>
+            <input type="range" id="clarezaMemoria" min="1" max="5" value="3" oninput="atualizarClareza(this.value)">
+            <small id="labelClareza" class="qualidade-label">Clareza: Média</small>
+        </div>
+
+        <div class="form-group">
+            <label>Tags (separadas por vírgula)</label>
+            <input type="text" id="sonhoTags" placeholder="Ex: água, família, escola">
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="fecharModal('modalSonho')">Cancelar</button>
+            <button class="btn btn-primary btn-roxo" onclick="salvarSonho()"><i class="fas fa-cloud-moon"></i> Salvar Sonho</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========== MODAL: DETALHE SONHO ========== -->
+<div class="modal-overlay" id="modalDetalheSonho">
+    <div class="modal-box">
+        <button class="modal-close" onclick="fecharModal('modalDetalheSonho')"><i class="fas fa-times"></i></button>
+        <div id="detalheSonhoConteudo"></div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<!-- ========== APP ========== -->
+<div class="app-container">
+
+    <!-- HEADER -->
+    <header class="header">
+        <button class="back-btn" onclick="window.location.href='../Index.html'">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+        <div class="logo"><i class="fas fa-seedling"></i> HabitTracker</div>
+        <div id="relogioAtual" class="relogio-header"></div>
+    </header>
+
+    <!-- NAV TABS -->
+    <nav class="nav-tabs">
+        <button class="tab-btn active" onclick="mostrarAba('visaoGeral', this)"><i class="fas fa-home"></i> Visão Geral</button>
+        <button class="tab-btn" onclick="mostrarAba('registros', this)"><i class="fas fa-history"></i> Registros</button>
+        <button class="tab-btn" onclick="mostrarAba('diarioSonhos', this)"><i class="fas fa-cloud-moon"></i> Diário</button>
+        <button class="tab-btn" onclick="mostrarAba('estatisticas', this)"><i class="fas fa-chart-bar"></i> Estatísticas</button>
+        <button class="tab-btn" onclick="mostrarAba('metas', this)"><i class="fas fa-bullseye"></i> Metas & Dicas</button>
+    </nav>
+
+    <!-- ========== ABA: VISÃO GERAL ========== -->
+    <section class="aba active" id="visaoGeral">
+
+        <!-- Cards de ação rápida -->
+        <div class="acao-rapida-grid">
+            <button class="card-acao card-acao-sono" onclick="abrirRegistrarSono()">
+                <i class="fas fa-bed"></i>
+                <span>Registrar Sono</span>
+                <small>Duração + qualidade</small>
+            </button>
+            <button class="card-acao card-acao-sonho" onclick="abrirRegistrarSonho()">
+                <i class="fas fa-cloud-moon-rain"></i>
+                <span>Registrar Sonho</span>
+                <small>Diário de sonhos</small>
+            </button>
+        </div>
+
+        <!-- Resumo noite passada -->
+        <div class="card card-noite" id="cardNoitePassada">
+            <div class="card-header-inline">
+                <h3><i class="fas fa-star"></i> Última Noite</h3>
+                <span id="badgeUltimaNoite" class="badge-qualidade"></span>
+            </div>
+            <div id="ultimaNoiteConteudo">
+                <div class="empty-state-inline">
+                    <i class="fas fa-moon"></i>
+                    <p>Nenhum registro ainda. Registre sua primeira noite!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats rápidas -->
+        <div class="stats-mini-grid">
+            <div class="stat-mini">
+                <div class="stat-mini-icon" style="background:linear-gradient(135deg,#667eea,#764ba2)"><i class="fas fa-clock"></i></div>
+                <div class="stat-mini-valor" id="mediaSemanal">--</div>
+                <div class="stat-mini-label">Média semanal</div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-icon" style="background:linear-gradient(135deg,#f6d365,#fda085)"><i class="fas fa-star"></i></div>
+                <div class="stat-mini-valor" id="mediaQualidade">--</div>
+                <div class="stat-mini-label">Qualidade média</div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-icon" style="background:linear-gradient(135deg,#43e97b,#38f9d7)"><i class="fas fa-fire"></i></div>
+                <div class="stat-mini-valor" id="sequenciaAtual">0</div>
+                <div class="stat-mini-label">Dias seguidos</div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-icon" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb)"><i class="fas fa-cloud-moon"></i></div>
+                <div class="stat-mini-valor" id="totalSonhos">0</div>
+                <div class="stat-mini-label">Sonhos registrados</div>
+            </div>
+        </div>
+
+        <!-- Insight do dia -->
+        <div class="card card-insight" id="cardInsight">
+            <h3><i class="fas fa-lightbulb"></i> Insight do Dia</h3>
+            <p id="textoInsight">Carregando insight...</p>
+        </div>
+
+        <!-- Mini gráfico últimos 7 dias -->
+        <div class="card">
+            <h3><i class="fas fa-chart-bar"></i> Sono nos últimos 7 dias</h3>
+            <canvas id="chartMiniSemana" height="120"></canvas>
+        </div>
+
+    </section>
+
+    <!-- ========== ABA: REGISTROS ========== -->
+    <section class="aba" id="registros">
+        <div class="section-header-flex">
+            <h3><i class="fas fa-history"></i> Histórico de Sono</h3>
+            <button class="btn btn-primary btn-sm" onclick="abrirRegistrarSono()"><i class="fas fa-plus"></i> Novo</button>
+        </div>
+        <div id="listaRegistros" class="lista-registros">
+            <div class="empty-state"><i class="fas fa-bed" style="font-size:2.5rem;opacity:0.3;"></i><p>Nenhum registro ainda.</p></div>
+        </div>
+    </section>
+
+    <!-- ========== ABA: DIÁRIO DE SONHOS ========== -->
+    <section class="aba" id="diarioSonhos">
+        <div class="section-header-flex">
+            <h3><i class="fas fa-cloud-moon"></i> Diário de Sonhos</h3>
+            <button class="btn btn-primary btn-roxo btn-sm" onclick="abrirRegistrarSonho()"><i class="fas fa-plus"></i> Novo Sonho</button>
+        </div>
+
+        <!-- Filtros diário -->
+        <div class="filtros-sonho">
+            <button class="filtro-btn active" onclick="filtrarSonhos('todos', this)">Todos</button>
+            <button class="filtro-btn" onclick="filtrarSonhos('normal', this)">💭 Normais</button>
+            <button class="filtro-btn" onclick="filtrarSonhos('lucido', this)">✨ Lúcidos</button>
+            <button class="filtro-btn" onclick="filtrarSonhos('pesadelo', this)">😱 Pesadelos</button>
+            <button class="filtro-btn" onclick="filtrarSonhos('recorrente', this)">🔄 Recorrentes</button>
+        </div>
+
+        <div id="listaSonhos" class="lista-sonhos">
+            <div class="empty-state"><i class="fas fa-cloud-moon-rain" style="font-size:2.5rem;opacity:0.3;"></i><p>Nenhum sonho registrado ainda.<br><small>Tente registrar assim que acordar!</small></p></div>
+        </div>
+    </section>
+
+    <!-- ========== ABA: ESTATÍSTICAS ========== -->
+    <section class="aba" id="estatisticas">
+
+        <!-- Cards grandes -->
+        <div class="stats-grandes-grid">
+            <div class="stat-grande">
+                <i class="fas fa-clock" style="color:#667eea"></i>
+                <div class="stat-grande-valor" id="statTotalHoras">0h</div>
+                <div class="stat-grande-label">Total de horas dormidas</div>
+            </div>
+            <div class="stat-grande">
+                <i class="fas fa-moon" style="color:#a18cd1"></i>
+                <div class="stat-grande-valor" id="statMediaHoras">0h</div>
+                <div class="stat-grande-label">Média por noite</div>
+            </div>
+            <div class="stat-grande">
+                <i class="fas fa-star" style="color:#f6d365"></i>
+                <div class="stat-grande-valor" id="statQualidadeMedia">0</div>
+                <div class="stat-grande-label">Qualidade média (1-5)</div>
+            </div>
+            <div class="stat-grande">
+                <i class="fas fa-calendar-check" style="color:#43e97b"></i>
+                <div class="stat-grande-valor" id="statDiasRegistrados">0</div>
+                <div class="stat-grande-label">Dias registrados</div>
+            </div>
+        </div>
+
+        <!-- Distribuição de qualidade -->
+        <div class="charts-grid">
+            <div class="card chart-card">
+                <h4><i class="fas fa-chart-line"></i> Horas dormidas (últimos 14 dias)</h4>
+                <canvas id="chartHoras"></canvas>
+            </div>
+            <div class="card chart-card">
+                <h4><i class="fas fa-chart-pie"></i> Distribuição de qualidade</h4>
+                <canvas id="chartQualidade"></canvas>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="card chart-card">
+                <h4><i class="fas fa-chart-bar"></i> Horário de dormir</h4>
+                <canvas id="chartHorario"></canvas>
+            </div>
+            <div class="card chart-card">
+                <h4><i class="fas fa-cloud-moon"></i> Tipos de sonho</h4>
+                <canvas id="chartTiposSonho"></canvas>
+            </div>
+        </div>
+
+        <!-- Fatores x qualidade -->
+        <div class="card" style="margin-top:16px;">
+            <h4><i class="fas fa-flask"></i> Impacto dos fatores na qualidade do sono</h4>
+            <div id="analiseImpactos" class="analise-impactos"></div>
+        </div>
+
+        <!-- Humor ao acordar -->
+        <div class="card" style="margin-top:16px;">
+            <h4><i class="fas fa-smile"></i> Humor ao acordar</h4>
+            <div id="analiseHumor" class="analise-humor"></div>
+        </div>
+
+    </section>
+
+    <!-- ========== ABA: METAS & DICAS ========== -->
+    <section class="aba" id="metas">
+
+        <!-- Meta de horas -->
+        <div class="card">
+            <h3><i class="fas fa-bullseye"></i> Meta de Sono Diária</h3>
+            <div class="meta-config">
+                <div class="meta-slider-wrap">
+                    <label>Horas de sono por noite: <strong id="metaHorasValor">8h</strong></label>
+                    <input type="range" id="metaHorasSlider" min="4" max="12" step="0.5" value="8" oninput="atualizarMetaHoras(this.value)">
+                    <div class="meta-range-labels"><span>4h</span><span>8h (ideal)</span><span>12h</span></div>
+                </div>
+                <button class="btn btn-primary" onclick="salvarMetaHoras()"><i class="fas fa-save"></i> Salvar Meta</button>
+            </div>
+            <div class="meta-progresso-semana" id="metaProgressoSemana"></div>
+        </div>
+
+        <!-- Pontuação de bem-estar -->
+        <div class="card card-bem-estar">
+            <h3><i class="fas fa-heart"></i> Índice de Bem-Estar do Sono</h3>
+            <div class="bem-estar-circulo">
+                <svg viewBox="0 0 120 120" class="bem-estar-svg">
+                    <circle class="be-bg" cx="60" cy="60" r="52"/>
+                    <circle class="be-fill" id="beCirculo" cx="60" cy="60" r="52" stroke-dasharray="326.73" stroke-dashoffset="326.73"/>
+                </svg>
+                <div class="be-valor">
+                    <span id="beScore">--</span>
+                    <small>/100</small>
+                </div>
+            </div>
+            <p id="beDescricao" class="be-descricao">Registre pelo menos 3 noites para calcular seu índice.</p>
+        </div>
+
+        <!-- Dicas personalizadas -->
+        <div class="card">
+            <h3><i class="fas fa-lightbulb"></i> Dicas Personalizadas</h3>
+            <div id="dicasPersonalizadas" class="dicas-lista"></div>
+        </div>
+
+        <!-- Dicas gerais de sono -->
+        <div class="card">
+            <h3><i class="fas fa-book-medical"></i> Guia de Higiene do Sono</h3>
+            <div class="guia-sono">
+                <div class="guia-item">
+                    <div class="guia-icone" style="background:linear-gradient(135deg,#667eea,#764ba2)"><i class="fas fa-clock"></i></div>
+                    <div><strong>Horário consistente</strong><p>Durma e acorde sempre no mesmo horário, inclusive nos fins de semana. Isso regula seu relógio biológico.</p></div>
+                </div>
+                <div class="guia-item">
+                    <div class="guia-icone" style="background:linear-gradient(135deg,#f6d365,#fda085)"><i class="fas fa-mobile-alt"></i></div>
+                    <div><strong>Evite telas antes de dormir</strong><p>A luz azul dos dispositivos suprime a melatonina. Evite telas 1h antes de dormir.</p></div>
+                </div>
+                <div class="guia-item">
+                    <div class="guia-icone" style="background:linear-gradient(135deg,#4facfe,#00f2fe)"><i class="fas fa-temperature-low"></i></div>
+                    <div><strong>Ambiente fresco</strong><p>O quarto ideal para dormir tem temperatura entre 18-22°C. Ambientes quentes prejudicam o sono profundo.</p></div>
+                </div>
+                <div class="guia-item">
+                    <div class="guia-icone" style="background:linear-gradient(135deg,#43e97b,#38f9d7)"><i class="fas fa-coffee"></i></div>
+                    <div><strong>Limite a cafeína</strong><p>Evite cafeína após as 14h. Ela tem meia-vida de 5-6h e pode prejudicar o início do sono.</p></div>
+                </div>
+                <div class="guia-item">
+                    <div class="guia-icone" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb)"><i class="fas fa-spa"></i></div>
+                    <div><strong>Rotina relaxante</strong><p>Crie rituais antes de dormir: leitura, meditação, banho quente. Isso sinaliza ao cérebro que é hora de descansar.</p></div>
+                </div>
+                <div class="guia-item">
+                    <div class="guia-icone" style="background:linear-gradient(135deg,#fd7eb4,#ff6b6b)"><i class="fas fa-dumbbell"></i></div>
+                    <div><strong>Exercite-se cedo</strong><p>Atividade física melhora a qualidade do sono, mas evite exercícios intensos nas 3h antes de dormir.</p></div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+</div><!-- /app-container -->
+
+<script src="sonho.js"></script>
+</body>
+</html>

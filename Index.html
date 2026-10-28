@@ -1,0 +1,70 @@
+<!--http://127.0.0.1:5501/Index.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hábitos Tracker - Home</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="Style.css">
+</head>
+<body>
+    <!-- Partículas de fundo -->
+    <div class="particles" id="particles"></div>
+
+
+    <!-- ========== MODAL SOBRE ========== -->
+    <div class="auth-overlay" id="modalSobre">
+        <div class="auth-box auth-box-sobre">
+            <button class="auth-close" onclick="fecharModal('modalSobre')"><i class="fas fa-times"></i></button>
+            <div class="auth-header">
+                <div class="auth-icon" style="background:linear-gradient(135deg,#667eea,#764ba2)"><i class="fas fa-seedling"></i></div>
+                <h2>HabitTracker</h2>
+                <p>Seu companheiro de hábitos saudáveis</p>
+            </div>
+            <div class="sobre-content">
+                <div class="sobre-item"><i class="fas fa-tint" style="color:#4facfe"></i><div><strong>Água</strong><p>Monitore sua hidratação diária com metas personalizadas.</p></div></div>
+                <div class="sobre-item"><i class="fas fa-book" style="color:#fcb69f"></i><div><strong>Leitura</strong><p>Acompanhe seus livros (PDF e EPUB), sessões e estatísticas.</p></div></div>
+                <div class="sobre-item"><i class="fas fa-moon" style="color:#a8edea"></i><div><strong>Sono &amp; Sonhos</strong><p>Registre qualidade do sono, diário de sonhos e obtenha insights.</p></div></div>
+                <div class="sobre-versao">
+                    <span>Versão 2.0</span> · <span>HTML • CSS • JS</span> · <span>Feito com <i class="fas fa-heart" style="color:#e74c3c"></i></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== CONTAINER PRINCIPAL ========== -->
+    <div class="container">
+        <header class="header">
+            <div class="logo"><i class="fas fa-seedling"></i> HabitTracker</div>
+            <div class="menu">
+                <button class="nav-btn" onclick="showAbout()"><i class="fas fa-info-circle"></i> Sobre</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <p class="subtitle">
+                Monitore seus hábitos diários de forma simples e visual.
+                Transforme sua rotina com consistência e disciplina.
+            </p>
+            <div class="buttons-grid">
+                <button class="main-btn btn-water" onclick="goToWater()">
+                    <img src="imagem/agua.jpg" alt="Água" class="btn-image">
+                    <div class="btn-text">Água</div>
+                </button>
+                <button class="main-btn btn-reading" onclick="goToReading()">
+                    <img src="imagem/leitura.jpg" alt="Leitura" class="btn-image">
+                    <div class="btn-text">Leitura</div>
+                </button>
+                <button class="main-btn btn-sleep" onclick="goToSleep()">
+                    <img src="imagem/sono.jpg" alt="Sono" class="btn-image">
+                    <div class="btn-text">Sono &amp; Sonhos</div>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script src="Script.js"></script>
+</body>
+</html>
