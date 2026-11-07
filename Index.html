@@ -1,75 +1,110 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>HabitTracker</title>
-    <link rel="shortcut icon" href="img/logo.png" type="logo" class="logo" >
+
+    <link rel="shortcut icon" href="img/logo.png" type="image/png">
     <link rel="stylesheet" href="style.css">
-    
+
 </head>
+
 <body>
+
     <header>
+
         <div class="header_esquerda">
-        <button class="btn">
-            <img src="img/ico_menu.png">
-        </button>
-        <div class="logo">
-            <img src="img/logo.png" alt="logo">
-            <p>HabitTracker</p>
+
+            <button class="btn" aria-label="Abrir menu">
+                <img src="img/ico_menu.png" alt="Menu">
+            </button>
+
+            <div class="logo">
+                <img src="img/logo.png" alt="Logo HabitTracker">
+                <p>HabitTracker</p>
+            </div>
+
         </div>
-        </div>
+
         <div class="header_direita">
-        <div class="cabecalho">
-            <button class="#incio">Inicio</button>
-            <button class="#monitoramento">Monitoramento</button>
-            <button class="#sobre">Sobre</button>
-            <button class="#contato">Contato</button>
-        </div>
-        
-        <button class="notificacao_btn">
-            <img src="img/ico_notificacao.png">
-        </button>
-        
-        <button class="tema_btn">
-            <img src="img/sol.png" alt="sol">
-            <img src="img/lua.png" alt="lua">
-        </button>
 
-        <button class="login">Login</button>
+            <nav class="cabecalho">
+                <a href="#inicio">Início</a>
+                <a href="#monitoramento">Monitoramento</a>
+                <a href="#sobre">Sobre</a>
+                <a href="#contato">Contato</a>
+            </nav>
+
+            <button class="notificacao_btn" aria-label="Notificações">
+                <img src="img/ico_notificacao.png" alt="Notificações">
+            </button>
+
+            <button class="tema_btn" aria-label="Alterar tema">
+                <img src="img/sol.png" alt="Tema claro">
+                <img src="img/lua.png" alt="Tema escuro">
+            </button>
+
+            <button class="login">Login</button>
+
         </div>
+
     </header>
+
     <main>
-        <div class="inicio">
+
+        <section class="inicio" id="inicio">
+
             <div class="inicio_esquerda">
-            <div class="apresentacao">
-                <p>monitore a sua rotina</p>
-            </div>
-        <div class="nome">
-            <H1>Habit</H1>
-            <h2>Tracker</h2>
-        </div>
-        <div class="apresentacao">
-            <p>O primeiro passo ao sucesso é tentar algo novo</p>
-        </div>
-        <div class="monitoramento">
-            <button class="agua_btn">
-                <img src="img/agua.png" alt="agua">
-            </button>
-            <button class="sono_btn">
-                <img src="img/despertador.png" alt="despertador">
-            </button>
-            <button class="leitura_btn">
-                <img src="img/leitura.png" alt="leitura">
-            </button>
-        </div>
-        </div>
-        <div class="incio_direita">
-            <div class="copo">
-                <img src="img/copo.png" alt="copo"></div>
+
+                <div class="apresentacao apresentacao_top">
+                    <p>Monitore a sua rotina</p>
+                </div>
+
+                <div class="nome">
+                    <h1>Habit</h1>
+                    <h2>Tracker</h2>
+                </div>
+
+                <div class="apresentacao">
+                    <p>O primeiro passo ao sucesso é tentar algo novo</p>
+                </div>
+
+                <div class="monitoramento" id="monitoramento">
+
+                    <button class="agua_btn" aria-label="Monitoramento de água">
+                        <img src="img/agua.png" alt="Água">
+                    </button>
+
+                    <button class="sono_btn" aria-label="Monitoramento do sono">
+                        <img src="img/despertador.png" alt="Sono">
+                    </button>
+
+                    <button class="leitura_btn" aria-label="Monitoramento de leitura">
+                        <img src="img/leitura.png" alt="Leitura">
+                    </button>
+
+                </div>
 
             </div>
-    </div>
+
+            <div class="inicio_direita">
+
+                <div class="copo">
+                    <img src="img/copo.png" alt="Copo com água">
+                </div>
+            <div class="decoracao-fundo">
+            <span class="onda-amarela"></span>
+            <span class="onda-branca"></span>
+         <span class="arco-branco"></span>
+            </div>
+            </div>
+
+        </section>
+
     </main>
 
 </body>
