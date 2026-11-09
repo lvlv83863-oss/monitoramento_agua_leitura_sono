@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Copo 3D</title>
+<style>
+:root{--bg:#eef6fb;--ink:#17384d;--line:#2f8fc9;--chip:rgba(255,255,255,.85);color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1a23;--ink:#d9eef9;--line:#7cc4ee;--chip:rgba(19,34,45,.85)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+
+/* ===== COMPONENTE: copie este bloco CSS + o <div data-copo3d> + o <script> ===== */
+.copo3d{position:relative;width:100%;height:min(80vh,640px);min-height:340px;overflow:hidden;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.copo3d:active{cursor:grabbing}
+.copo3d canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.copo3d .cotas{position:absolute;inset:0;pointer-events:none}
+.copo3d .cota{position:absolute;transform:translate(-50%,-50%);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap;padding:2px 7px;border:1px solid var(--line);border-radius:4px;background:var(--chip);color:var(--ink)}
+.copo3d .info{position:absolute;left:12px;top:10px;font-size:12px;opacity:.75;pointer-events:none}
+.copo3d .ui{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:6px;flex-wrap:wrap;justify-content:center;width:calc(100% - 24px)}
+.copo3d button{font:inherit;font-size:12px;color:var(--ink);background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer}
+.copo3d button[aria-pressed="true"]{background:var(--line);color:#fff}
+.copo3d button:focus-visible{outline:2px solid var(--line);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<div class="copo3d" data-copo3d></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  const T = THREE;
+
+  /* ---------- medidas (cm) — mesma ideia do motor: perfil analítico → grade → malha/partículas ---------- */
+  const CM = { H: 12, Rt: 3.75, Rb: 2.6, wall: 0.3, floor: 0.8, water: 9.5 };
+  const rOut = y => CM.Rb + (CM.Rt - CM.Rb) * y / CM.H;
+  const rIn = y => rOut(y) - CM.wall;
+  const wr = y => rIn(y) - 0.015;
+  const P = (r, y) => new T.Vector2(r, y);
+  const fmt = n => n.toFixed(1).replace('.', ',');
+
+  function glassProfile() {
+    const a = [P(0, 0), P(1.4, 0), P(CM.Rb - 0.3, 0), P(CM.Rb - 0.12, 0.04), P(CM.Rb - 0.04, 0.13)];
+    for (let y = 0.75; y <= CM.H - 0.3; y += 0.75) a.push(P(rOut(y), y));
+    const H = CM.H;
+    a.push(P(rOut(H) + 0.05, H - 0.12), P(rOut(H) + 0.07, H), P(rOut(H) + 0.03, H + 0.05), P(rOut(H) - 0.15, H + 0.06), P(rIn(H) + 0.02, H + 0.04), P(rIn(H), H - 0.1));
+    for (let y = H - 0.75; y >= 1.5; y -= 0.75) a.push(P(rIn(y), y));
+    a.push(P(rIn(CM.floor) - 0.1, CM.floor), P(1.2, CM.floor), P(0, CM.floor + 0.04));
+    return a;
+  }
+  function waterProfile() {
+    const F = CM.floor, W = CM.water, a = [P(0, F + 0.05), P(1.2, F + 0.03), P(wr(F) - 0.1, F + 0.02)];
+    for (let y = F + 0.7; y < W; y += 0.7) a.push(P(wr(y), y));
+    a.push(P(wr(W), W), P(wr(W) * 0.5, W), P(0, W));
+    return a;
+  }
+  function volumeMl() {
+    let v = 0; const n = 200, h = (CM.water - CM.floor) / n;
+    for (let i = 0; i < n; i++) { const r = wr(CM.floor + (i + 0.5) * h); v += Math.PI * r * r * h; }
+    return Math.round(v);
+  }
+  function brimMl() {
+    let v = 0; const n = 200, h = (CM.H - CM.floor) / n;
+    for (let i = 0; i < n; i++) { const r = rIn(CM.floor + (i + 0.5) * h); v += Math.PI * r * r * h; }
+    return Math.round(v);
+  }
+  const rng = (s => () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; })(7);
+
+  function init(root) {
+    const W0 = root.clientWidth || 600, H0 = root.clientHeight || 500;
+    const renderer = new T.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    root.appendChild(renderer.domElement);
+    const scene = new T.Scene();
+    const camera = new T.PerspectiveCamera(35, W0 / H0, 0.1, 200);
+    const target = new T.Vector3(0, 6.2, 0);
+
+    scene.add(new T.AmbientLight(0xffffff, 0.75));
+    const l1 = new T.DirectionalLight(0xffffff, 0.9); l1.position.set(3, 8, 6); scene.add(l1);
+    const l2 = new T.DirectionalLight(0x9fd0ff, 0.5); l2.position.set(-6, 3, -4); scene.add(l2);
+
+    /* ---------- sólido ---------- */
+    const solid = new T.Group(); scene.add(solid);
+    const glass = new T.Mesh(new T.LatheGeometry(glassProfile(), 72),
+      new T.MeshPhongMaterial({ color: 0xcfe9f6, specular: 0xffffff, shininess: 140, transparent: true, opacity: 0.26, side: T.DoubleSide, depthWrite: false }));
+    glass.renderOrder = 3; solid.add(glass);
+
+    const water = new T.Mesh(new T.LatheGeometry(waterProfile(), 72),
+      new T.MeshPhongMaterial({ color: 0x7ab9de, specular: 0xffffff, shininess: 60, transparent: true, opacity: 0.55, side: T.DoubleSide, depthWrite: false }));
+    water.renderOrder = 2; solid.add(water);
+
+    const surf = new T.Mesh(new T.CircleGeometry(wr(CM.water), 72), new T.MeshBasicMaterial({ color: 0xd6edf9, transparent: true, opacity: 0.45, side: T.DoubleSide, depthWrite: false }));
+    surf.rotation.x = -Math.PI / 2; surf.position.y = CM.water + 0.005; surf.renderOrder = 2; solid.add(surf);
+    const menis = new T.Mesh(new T.TorusGeometry(wr(CM.water), 0.035, 8, 72), new T.MeshBasicMaterial({ color: 0xeaf6fc, transparent: true, opacity: 0.7 }));
+    menis.rotation.x = Math.PI / 2; menis.position.y = CM.water; solid.add(menis);
+
+    // bolhas: coluna subindo do fundo + algumas na superfície
+    const bGeo = new T.SphereGeometry(1, 14, 14), bMat = new T.MeshPhongMaterial({ color: 0x2f86c4, specular: 0xffffff, shininess: 120, transparent: true, opacity: 0.9 });
+    const bub = (x, y, z, r) => { const m = new T.Mesh(bGeo, bMat); m.position.set(x, y, z); m.scale.setScalar(r); solid.add(m); };
+    for (let i = 0; i < 22; i++) { const t = i / 21;
+      bub(0.5 * Math.sin(t * 6.5 + 0.5) * (1 - 0.2 * t) + (rng() - 0.5) * 0.15, CM.floor + 0.35 + t * (CM.water - CM.floor - 0.9), 0.3 * Math.sin(t * 5) + (rng() - 0.5) * 0.15, 0.05 + rng() * 0.09 + t * 0.03); }
+    for (let i = 0; i < 10; i++) { const a = rng() * 6.283, d = rng() * 2.5;
+      bub(Math.cos(a) * d, CM.water - 0.1 - rng() * 0.5, Math.sin(a) * d, 0.03 + rng() * 0.025); }
+
+    // reflexos verticais (ficam voltados para a câmera, como no desenho)
+    const stripes = new T.Group(); solid.add(stripes);
+    const sp = []; for (let y = 0.8; y <= 11.4; y += 0.8) sp.push(P(rOut(y) + 0.015, y));
+    const sMat = new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, side: T.DoubleSide, depthWrite: false });
+    [[0.75, 0.2], [-0.62, 0.07]].forEach(([s, l]) => { const m = new T.Mesh(new T.LatheGeometry(sp, 6, s, l), sMat); m.renderOrder = 4; stripes.add(m); });
+
+    /* ---------- malha (wireframe) e partículas (vértices da malha) ---------- */
+    const meshG = new T.Group(); scene.add(meshG);
+    const gm = new T.LatheGeometry(glassProfile(), 32), wm = new T.LatheGeometry(waterProfile(), 32);
+    meshG.add(new T.LineSegments(new T.WireframeGeometry(gm), new T.LineBasicMaterial({ color: 0x2f9bd6, transparent: true, opacity: 0.4 })));
+    meshG.add(new T.LineSegments(new T.WireframeGeometry(wm), new T.LineBasicMaterial({ color: 0x5fb3e6, transparent: true, opacity: 0.22 })));
+    const pts = new T.Group(); scene.add(pts);
+    pts.add(new T.Points(gm, new T.PointsMaterial({ color: 0x1f78b4, size: 0.1, transparent: true, opacity: 0.95 })));
+    pts.add(new T.Points(wm, new T.PointsMaterial({ color: 0x6cc0f0, size: 0.07, transparent: true, opacity: 0.8 })));
+
+    /* ---------- cotas (linhas 3D no plano voltado à câmera + rótulos HTML) ---------- */
+    const dim = new T.Group(); scene.add(dim);
+    const lm = new T.LineBasicMaterial({ color: 0x2f8fc9 });
+    const seg = (a, b) => dim.add(new T.Line(new T.BufferGeometry().setFromPoints([new T.Vector3(a[0], a[1], 0), new T.Vector3(b[0], b[1], 0)]), lm));
+    const tick = (x, y, v) => v ? seg([x - 0.15, y], [x + 0.15, y]) : seg([x, y - 0.15], [x, y + 0.15]);
+    const cotasEl = document.createElement('div'); cotasEl.className = 'cotas'; root.appendChild(cotasEl);
+    const labels = [];
+    const label = (txt, x, y) => { const e = document.createElement('div'); e.className = 'cota'; e.textContent = txt; cotasEl.appendChild(e); labels.push({ e, p: new T.Vector3(x, y, 0) }); };
+    const H = CM.H, W = CM.water;
+    // altura total
+    seg([rOut(H) + 0.15, H], [6.3, H]); seg([CM.Rb + 0.15, 0], [6.3, 0]); seg([6, 0], [6, H]); tick(6, 0, 1); tick(6, H, 1); label(fmt(H) + ' cm', 6, H / 2);
+    // nível da água
+    seg([-(rOut(W) + 0.15), W], [-6.3, W]); seg([-(CM.Rb + 0.15), 0], [-6.3, 0]); seg([-6, 0], [-6, W]); tick(-6, 0, 1); tick(-6, W, 1); label('água ' + fmt(W) + ' cm', -6, W / 2);
+    // Ø boca
+    seg([-CM.Rt, H + 0.15], [-CM.Rt, 13.5]); seg([CM.Rt, H + 0.15], [CM.Rt, 13.5]); seg([-CM.Rt, 13.3], [CM.Rt, 13.3]); tick(-CM.Rt, 13.3, 0); tick(CM.Rt, 13.3, 0); label('Ø ' + fmt(CM.Rt * 2) + ' cm', 0, 13.3);
+    // Ø base
+    seg([-CM.Rb, -0.15], [-CM.Rb, -1.5]); seg([CM.Rb, -0.15], [CM.Rb, -1.5]); seg([-CM.Rb, -1.3], [CM.Rb, -1.3]); tick(-CM.Rb, -1.3, 0); tick(CM.Rb, -1.3, 0); label('Ø ' + fmt(CM.Rb * 2) + ' cm', 0, -1.3);
+    // espessuras (chamadas)
+    seg([(rOut(10.5) + rIn(10.5)) / 2, 10.5], [4.0, 10.9]); label('parede ' + fmt(CM.wall) + ' cm', 4.9, 10.9);
+    seg([2.2, CM.floor / 2], [3.5, 0.55]); label('fundo ' + fmt(CM.floor) + ' cm', 4.5, 0.55);
+
+    const info = document.createElement('div'); info.className = 'info';
+    info.innerHTML = 'água ≈ ' + volumeMl() + ' ml · até a borda ≈ ' + brimMl() + ' ml<br>arraste para girar · role para aproximar';
+    root.appendChild(info);
+
+    /* ---------- botões de camadas ---------- */
+    const layers = { 'Sólido': solid, 'Malha': meshG, 'Partículas': pts, 'Cotas': dim };
+    const ui = document.createElement('div'); ui.className = 'ui'; root.appendChild(ui);
+    Object.keys(layers).forEach(k => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = k;
+      const on = k !== 'Partículas'; b.setAttribute('aria-pressed', on); layers[k].visible = on;
+      b.addEventListener('click', () => { const v = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', v); layers[k].visible = v; if (k === 'Cotas') cotasEl.style.display = v ? '' : 'none'; });
+      b.addEventListener('pointerdown', e => e.stopPropagation());
+      ui.appendChild(b);
+    });
+
+    /* ---------- câmera orbital ---------- */
+    let az = 0.55, el = 0.2, zoom = 1, auto = true, w = W0, h = H0;
+    const fit = () => { const aspect = w / h, t = Math.tan(camera.fov * Math.PI / 360); return Math.max(8.8 / t, 7.4 / (t * aspect)); };
+    const ptr = new Map(); let pinch = 0;
+    root.addEventListener('pointerdown', e => { ptr.set(e.pointerId, e); root.setPointerCapture(e.pointerId); auto = false; });
+    root.addEventListener('pointermove', e => {
+      if (!ptr.has(e.pointerId)) return; const p = ptr.get(e.pointerId);
+      if (ptr.size === 1) { az -= (e.clientX - p.clientX) * 0.008; el = Math.max(-0.2, Math.min(1.35, el + (e.clientY - p.clientY) * 0.006)); }
+      ptr.set(e.pointerId, e);
+      if (ptr.size === 2) { const [a, b] = [...ptr.values()], d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); if (pinch) zoom = Math.max(0.45, Math.min(1.6, zoom * pinch / d)); pinch = d; }
+    });
+    const up = e => { ptr.delete(e.pointerId); pinch = 0; };
+    root.addEventListener('pointerup', up); root.addEventListener('pointercancel', up);
+    root.addEventListener('wheel', e => { e.preventDefault(); zoom = Math.max(0.45, Math.min(1.6, zoom * (1 + e.deltaY * 0.001))); auto = false; }, { passive: false });
+
+    const resize = () => { w = root.clientWidth; h = root.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); };
+    new ResizeObserver(resize).observe(root); resize();
+
+    const v = new T.Vector3();
+    (function loop() {
+      requestAnimationFrame(loop);
+      if (auto) az += 0.004;
+      const d = fit() * zoom;
+      camera.position.set(target.x + d * Math.sin(az) * Math.cos(el), target.y + d * Math.sin(el), target.z + d * Math.cos(az) * Math.cos(el));
+      camera.lookAt(target);
+      dim.rotation.y = az; stripes.rotation.y = az; dim.updateMatrixWorld(true);
+      labels.forEach(l => { v.copy(l.p); dim.localToWorld(v); v.project(camera); l.e.style.left = ((v.x * 0.5 + 0.5) * w) + 'px'; l.e.style.top = ((-v.y * 0.5 + 0.5) * h) + 'px'; });
+      renderer.render(scene, camera);
+    })();
+  }
+
+  document.querySelectorAll('[data-copo3d]').forEach(init);
+})();
+</script>
+</body>
+</html>

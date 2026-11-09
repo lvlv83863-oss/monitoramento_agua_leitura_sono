@@ -190,8 +190,8 @@ main {
 
 .onda-amarela {
     position: absolute;
-    width: 65%;
-    height: 65%;
+    width: 105%;
+    height: 100vh;
     background-color: #edde9e;
 
     border-radius: 60% 40% 0 0;
@@ -341,10 +341,26 @@ main {
     justify-content: center;
 }
 
-.copo img {
+.copo img,
+.copo .copo3d {
     width: min(100%, 800px);
     height: auto;
     object-fit: contain;
+}
+
+.copo .copo3d {
+    position: relative;
+    aspect-ratio: 702 / 666;
+    touch-action: pan-y;
+    cursor: grab;
+}
+
+.copo .copo3d canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
 }
 
 
@@ -424,7 +440,8 @@ main {
         flex-wrap: wrap;
     }
 
-    .copo img {
+    .copo img,
+    .copo .copo3d {
         width: min(85%, 350px);
     }
 
