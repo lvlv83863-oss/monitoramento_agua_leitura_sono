@@ -256,7 +256,7 @@ main {
 /* APRESENTAÇÃO */
 
 .apresentacao p {
-    color: #e9f2f6;
+    color: #edde9e;
     font-family: "Lora", serif;
     font-size: clamp(14px, 2.5vw, 20px);
     line-height: 1.6;
