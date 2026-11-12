@@ -105,6 +105,133 @@
 
         </section>
 
+        <section class="painel" id="painel-geral" aria-labelledby="painel-titulo">
+
+            <div class="painel_moldura">
+
+                <div class="painel_topo">
+                    <h2 id="painel-titulo">Monitoramento geral</h2>
+                    <p>Água, leitura e sono reunidos em um só painel</p>
+                </div>
+
+                <div class="painel_grade">
+
+                    <article class="pcard p-balanco">
+                        <header class="pcard_cab">
+                            <h3 class="pcard_titulo">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg>
+                                Balanço do dia
+                            </h3>
+                            <span class="pcard_data" id="p-balanco-data"></span>
+                        </header>
+                        <div class="p-anel" id="p-balanco"></div>
+                    </article>
+
+                    <article class="pcard p-lista">
+                        <header class="pcard_cab">
+                            <h3 class="pcard_titulo">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h2M4 12h2M4 18h2M10 6h10M10 12h10M10 18h10"/></svg>
+                                Atividades
+                            </h3>
+                            <label class="p-select">
+                                <span class="p-sr">Período da lista</span>
+                                <select id="p-periodo">
+                                    <option value="dia">Dia</option>
+                                    <option value="semana" selected>7 dias</option>
+                                    <option value="mes">30 dias</option>
+                                </select>
+                            </label>
+                        </header>
+                        <div class="p-lista_corpo" id="p-lista"></div>
+                    </article>
+
+                    <article class="pcard p-calendario">
+                        <header class="pcard_cab">
+                            <h3 class="pcard_titulo">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
+                                Calendário
+                            </h3>
+                        </header>
+                        <div class="p-cal_nav">
+                            <button type="button" id="p-mes-ant" aria-label="Mês anterior">&#8249;</button>
+                            <strong id="p-mes-nome"></strong>
+                            <button type="button" id="p-mes-prox" aria-label="Próximo mês">&#8250;</button>
+                        </div>
+                        <div class="p-cal" id="p-cal"></div>
+                    </article>
+
+                    <article class="pcard p-grafico">
+                        <header class="pcard_cab">
+                            <h3 class="pcard_titulo">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16"/><path d="M7 15l4-4 3 3 5-6"/></svg>
+                                Evolução das metas
+                            </h3>
+                            <ul class="p-legenda">
+                                <li style="--c:var(--p-agua)">Água</li>
+                                <li style="--c:var(--p-leitura)">Leitura</li>
+                                <li style="--c:var(--p-sono)">Sono</li>
+                            </ul>
+                        </header>
+                        <div class="p-grafico_corpo" id="p-grafico"></div>
+                    </article>
+
+                    <article class="pcard p-stats">
+                        <header class="pcard_cab">
+                            <h3 class="pcard_titulo">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 20V11M12 20V4M18 20v-6"/></svg>
+                                Estatísticas
+                            </h3>
+                            <span class="pcard_data" id="p-stats-periodo"></span>
+                        </header>
+                        <div id="p-stats"></div>
+                    </article>
+
+                    <article class="pcard p-hab" id="p-agua">
+                        <header class="pcard_cab">
+                            <h3 class="pcard_titulo">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5s6 6.2 6 10.5a6 6 0 0 1-12 0c0-4.3 6-10.5 6-10.5z"/></svg>
+                                Água
+                            </h3>
+                        </header>
+                        <div class="p-hab_corpo"></div>
+                    </article>
+
+                    <article class="pcard p-hab" id="p-leitura">
+                        <header class="pcard_cab">
+                            <h3 class="pcard_titulo">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5zM12 6.5v13"/></svg>
+                                Leitura
+                            </h3>
+                        </header>
+                        <div class="p-hab_corpo"></div>
+                    </article>
+
+                    <article class="pcard p-hab" id="p-sono">
+                        <header class="pcard_cab">
+                            <h3 class="pcard_titulo">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>
+                                Sono
+                            </h3>
+                        </header>
+                        <div class="p-hab_corpo"></div>
+                    </article>
+
+                    <article class="pcard p-frase">
+                        <header class="pcard_cab">
+                            <h3 class="pcard_titulo">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.2 5.3 5.8.5-4.4 3.8 1.4 5.6L12 15l-5 3.2 1.4-5.6L4 8.8l5.8-.5z"/></svg>
+                                Constância
+                            </h3>
+                        </header>
+                        <blockquote class="p-frase_texto" id="p-frase" aria-live="polite"></blockquote>
+                    </article>
+
+                </div>
+
+            </div>
+
+        </section>
+
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
